@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">TravelBuddy v3</string>
+
+    <string name="checkin_label">Enter check-in station</string>
+    <string name="checkin_button">Check in</string>
+
+    <string name="checkout_label">Enter check-out station</string>
+    <string name="checkout_button">Check out</string>
+
+    <string name="action_settings">Settings</string>
+
+</resources>
