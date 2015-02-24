@@ -4,15 +4,13 @@ import android.app.Activity;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
 
 public class TravelActivity extends Activity
-        implements  TravelFragment.OnStationSelectorClickListener,
+        implements TravelFragment.StationSelectorListener,
                     StationListFragment.OnStationSelectedListener {
 
     /**
@@ -31,7 +29,7 @@ public class TravelActivity extends Activity
     private String lastStart;
 
     /**
-     * The last journey's destination
+     * Bla bla. Change this description
      */
     private String lastDestination;
 
@@ -74,7 +72,7 @@ public class TravelActivity extends Activity
         } else {
             // Save the stations
             this.lastStart = checkinStation;
-            this.lastDestination = checkoutStation;
+//            this.lastDestination = checkoutStation;
 
             // Clear the text fields
             checkinField.setText("");
@@ -152,5 +150,10 @@ public class TravelActivity extends Activity
         transaction.addToBackStack(null);
 
         transaction.commit();
+    }
+
+    @Override
+    public void setCheckinStation(String station) {
+        lastStart = station;
     }
 }

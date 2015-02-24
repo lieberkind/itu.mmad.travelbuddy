@@ -40,15 +40,13 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/checkout_label"
         android:layout_alignParentRight="true"
-        android:text="..."
-        android:enabled="false" />
+        android:text="..." />
 
     <EditText android:id="@+id/checkout_station"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toLeftOf="@id/select_checkout_station_button"
-        android:layout_alignBottom="@id/select_checkout_station_button"
-        android:enabled="false" />
+        android:layout_alignBottom="@id/select_checkout_station_button" />
 
     <Button android:id="@+id/checkin_button"
         android:layout_width="120dp"
@@ -63,7 +61,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/checkout_station"
         android:layout_alignParentRight="true"
-        android:enabled="false"
         android:layout_marginTop="10dp" />
 
 </RelativeLayout>

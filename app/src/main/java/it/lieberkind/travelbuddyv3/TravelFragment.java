@@ -31,7 +31,7 @@ public class TravelFragment extends Fragment {
     /**
      * The listener for when one of the "select station" buttons are pressed
      */
-    OnStationSelectorClickListener stationSelectorClickListener;
+    StationSelectorListener stationSelectorClickListener;
 
     /**
      * Static method for easy creation of new TravelFragment instances
@@ -44,11 +44,11 @@ public class TravelFragment extends Fragment {
     {
         TravelFragment fragment = new TravelFragment();
 
-//        Bundle args = new Bundle();
-//        args.putString(CHECKIN_STATION, checkinStation);
-//        args.putString(CHECKOUT_STATION, checkoutStation);
-//
-//        fragment.setArguments(args);
+        Bundle args = new Bundle();
+        args.putString(CHECKIN_STATION, checkinStation);
+        args.putString(CHECKOUT_STATION, checkoutStation);
+
+        fragment.setArguments(args);
 
         return fragment;
     }
@@ -57,14 +57,6 @@ public class TravelFragment extends Fragment {
      * Empty constructor
      */
     public TravelFragment() {
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-
-        outState.putString("lol", "hello");
-
-        super.onSaveInstanceState(outState);
     }
 
     /**
@@ -77,7 +69,7 @@ public class TravelFragment extends Fragment {
         super.onAttach(activity);
 
         try {
-            stationSelectorClickListener = (OnStationSelectorClickListener) activity;
+            stationSelectorClickListener = (StationSelectorListener) activity;
         } catch (ClassCastException exception) {
             throw new ClassCastException(activity.toString() +
                     " must implement OnStationSelectorClickListener");
@@ -109,16 +101,31 @@ public class TravelFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View travelFragmentView = inflater.inflate(R.layout.fragment_travel, container, false);
+        super.onCreateView(inflater, container, savedInstanceState);
 
-//        if(getArguments() != null) {
-//            // Set the check-in station
-//            EditText checkinStation = (EditText) travelFragmentView.findViewById(R.id.checkin_station);
-//            checkinStation.setText(getArguments().getString(CHECKIN_STATION));
-//
-//            // Set the check-out station
-//            EditText checkoutStation = (EditText) travelFragmentView.findViewById(R.id.checkout_station);
-//            checkoutStation.setText(getArguments().getString(CHECKOUT_STATION));
-//        }
+        if(getArguments() != null) {
+            // Set the check-in station
+            EditText checkinStationField = (EditText) travelFragmentView.findViewById(R.id.checkin_station);
+            String checkinStation = getArguments().getString(CHECKIN_STATION);
+
+            checkinStationField.setText(checkinStation);
+
+            // Set the check-out station
+            EditText checkoutStation = (EditText) travelFragmentView.findViewById(R.id.checkout_station);
+            checkoutStation.setText(getArguments().getString(CHECKOUT_STATION));
+
+            // If no check-in station is set, we should make sure that the check-in section is
+            // enabled, and the check-out section is disabled
+            boolean enableCheckinSection = checkinStation == null || checkinStation.isEmpty();
+
+            toggleEnabled(travelFragmentView.findViewById(R.id.checkin_station), enableCheckinSection);
+            toggleEnabled(travelFragmentView.findViewById(R.id.select_checkin_station_button), enableCheckinSection);
+            toggleEnabled(travelFragmentView.findViewById(R.id.checkin_button), enableCheckinSection);
+
+            toggleEnabled(travelFragmentView.findViewById(R.id.checkout_station), !enableCheckinSection);
+            toggleEnabled(travelFragmentView.findViewById(R.id.select_checkout_station_button), !enableCheckinSection);
+            toggleEnabled(travelFragmentView.findViewById(R.id.checkout_button), !enableCheckinSection);
+        }
 
         createButtonListeners(travelFragmentView);
 
@@ -166,7 +173,7 @@ public class TravelFragment extends Fragment {
     /**
      * Create the button listeners for the fragment's view
      *
-     * @param view View
+     * @param fragmentView View
      */
     private void createButtonListeners(View fragmentView)
     {
@@ -179,7 +186,7 @@ public class TravelFragment extends Fragment {
     /**
      * Create the select check-in station button listener
      *
-     * @param view View
+     * @param fragmentView View
      */
     private void createSelectCheckinStationButtonListener(View fragmentView) {
         Button button = (Button) fragmentView.findViewById(R.id.select_checkin_station_button);
@@ -204,8 +211,14 @@ public class TravelFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view) {
-                stationSelectorClickListener.onStationSelectorClick(view);
+            public void onClick(View button) {
+                EditText checkinStationField = (EditText) getActivity().findViewById(R.id.checkin_station);
+
+                String checkinStation = checkinStationField.getText().toString();
+
+                stationSelectorClickListener.setCheckinStation(checkinStation);
+
+                stationSelectorClickListener.onStationSelectorClick(button);
             }
         });
     }
@@ -254,10 +267,6 @@ public class TravelFragment extends Fragment {
         Button button = (Button) view.findViewById(R.id.checkout_button);
     }
 
-    public interface OnStationSelectorClickListener {
-        public void onStationSelectorClick(View view);
-    }
-
     /**
      * Display a message to the user
      *
@@ -296,5 +305,44 @@ public class TravelFragment extends Fragment {
         } else {
             showMessage("Your journey has yet to begin");
         }
+    }
+
+    /**
+     * Toggle the enabled state of the check-in related views
+     *
+     * @param show boolean
+     */
+    private void toggleCheckinSection(boolean show) {
+        EditText textField = (EditText) getActivity().findViewById(R.id.checkin_station);
+        Button stationsButton = (Button) getActivity().findViewById(R.id.select_checkin_station_button);
+        Button checkinButton = (Button) getActivity().findViewById(R.id.checkin_button);
+
+        textField.setEnabled(show);
+        stationsButton.setEnabled(show);
+        checkinButton.setEnabled(show);
+    }
+
+    /**
+     * Toggle the enabled state of the check-out related views
+     *
+     * @param show boolean
+     */
+    private void toggleCheckoutSection(boolean show) {
+        EditText textField = (EditText) getActivity().findViewById(R.id.checkout_station);
+        Button stationsButton = (Button) getActivity().findViewById(R.id.select_checkout_station_button);
+        Button checkoutButton = (Button) getActivity().findViewById(R.id.checkout_button);
+
+        textField.setEnabled(show);
+        stationsButton.setEnabled(show);
+        checkoutButton.setEnabled(show);
+    }
+
+    /**
+     * Listener for when the select station buttons are pressed
+     */
+    public interface StationSelectorListener {
+        public void onStationSelectorClick(View view);
+
+        public void setCheckinStation(String station);
     }
 }
