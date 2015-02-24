@@ -149,6 +149,8 @@ public class TravelActivity extends Activity
 
         transaction.replace(R.id.frame, TravelFragment.create(lastStart, lastDestination));
 
+        transaction.addToBackStack(null);
+
         transaction.commit();
     }
 }

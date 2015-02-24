@@ -44,11 +44,11 @@ public class TravelFragment extends Fragment {
     {
         TravelFragment fragment = new TravelFragment();
 
-        Bundle args = new Bundle();
-        args.putString(CHECKIN_STATION, checkinStation);
-        args.putString(CHECKOUT_STATION, checkoutStation);
-
-        fragment.setArguments(args);
+//        Bundle args = new Bundle();
+//        args.putString(CHECKIN_STATION, checkinStation);
+//        args.putString(CHECKOUT_STATION, checkoutStation);
+//
+//        fragment.setArguments(args);
 
         return fragment;
     }
@@ -57,6 +57,14 @@ public class TravelFragment extends Fragment {
      * Empty constructor
      */
     public TravelFragment() {
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+
+        outState.putString("lol", "hello");
+
+        super.onSaveInstanceState(outState);
     }
 
     /**
@@ -102,15 +110,15 @@ public class TravelFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View travelFragmentView = inflater.inflate(R.layout.fragment_travel, container, false);
 
-        if(getArguments() != null) {
-            // Set the check-in station
-            EditText checkinStation = (EditText) travelFragmentView.findViewById(R.id.checkin_station);
-            checkinStation.setText(getArguments().getString(CHECKIN_STATION));
-
-            // Set the check-out station
-            EditText checkoutStation = (EditText) travelFragmentView.findViewById(R.id.checkout_station);
-            checkoutStation.setText(getArguments().getString(CHECKOUT_STATION));
-        }
+//        if(getArguments() != null) {
+//            // Set the check-in station
+//            EditText checkinStation = (EditText) travelFragmentView.findViewById(R.id.checkin_station);
+//            checkinStation.setText(getArguments().getString(CHECKIN_STATION));
+//
+//            // Set the check-out station
+//            EditText checkoutStation = (EditText) travelFragmentView.findViewById(R.id.checkout_station);
+//            checkoutStation.setText(getArguments().getString(CHECKOUT_STATION));
+//        }
 
         createButtonListeners(travelFragmentView);
 
