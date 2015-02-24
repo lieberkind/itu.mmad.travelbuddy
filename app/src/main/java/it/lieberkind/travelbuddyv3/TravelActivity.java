@@ -5,33 +5,28 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 
 public class TravelActivity extends Activity
         implements TravelFragment.StationSelectorListener,
+                    TravelFragment.TravelListener,
                     StationListFragment.OnStationSelectedListener {
-
-    /**
-     * Last start identifier
-     */
-    private static final String LAST_START = "last_start";
-
-    /**
-     * Last destination identifier
-     */
-    private static final String LAST_DESTINATION = "last_destination";
 
     /**
      * The last journey's starting point
      */
-    private String lastStart;
+    private String currentStart;
 
     /**
      * Bla bla. Change this description
      */
-    private String lastDestination;
+    private String currentDestination;
+
+    /**
+     * Indicate whether or not the user is currently checked in
+     */
+    private boolean checkedIn = false;
 
     /**
      * The id of the last pressed station selector button
@@ -52,43 +47,8 @@ public class TravelActivity extends Activity
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-        fragmentTransaction.add(R.id.frame, TravelFragment.create(lastStart, lastDestination));
+        fragmentTransaction.add(R.id.frame, TravelFragment.create(currentStart, currentDestination, checkedIn));
         fragmentTransaction.commit();
-    }
-
-    /**
-     * Check out at a station
-     */
-    private void checkout()
-    {
-        EditText checkinField = (EditText) findViewById(R.id.checkin_station);
-        String checkinStation = checkinField.getText().toString();
-
-        EditText checkoutField = (EditText) findViewById(R.id.checkout_station);
-        String checkoutStation = checkoutField.getText().toString();
-
-        if(checkoutStation.isEmpty()) {
-            showMessage("Please enter a check-out station");
-        } else {
-            // Save the stations
-            this.lastStart = checkinStation;
-//            this.lastDestination = checkoutStation;
-
-            // Clear the text fields
-            checkinField.setText("");
-            checkoutField.setText("");
-
-            // Inform the user...
-            showMessage("Journey ended!");
-
-            // Disable check-out button and text field
-            toggleEnabled(checkoutField, false);
-            toggleEnabled(R.id.checkout_button, false);
-
-            // Enable the check-in button and text field
-            toggleEnabled(R.id.checkin_button, true);
-            toggleEnabled(R.id.checkin_station, true);
-        }
     }
 
     /**
@@ -137,15 +97,15 @@ public class TravelActivity extends Activity
     @Override
     public void onStationSelected(String station) {
         if(lastSelectStationButtonId == R.id.select_checkin_station_button) {
-            lastStart = station;
+            currentStart = station;
         } else {
-            lastDestination = station;
+            currentDestination = station;
         }
 
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction transaction = fragmentManager.beginTransaction();
 
-        transaction.replace(R.id.frame, TravelFragment.create(lastStart, lastDestination));
+        transaction.replace(R.id.frame, TravelFragment.create(currentStart, currentDestination, checkedIn));
 
         transaction.addToBackStack(null);
 
@@ -154,6 +114,18 @@ public class TravelActivity extends Activity
 
     @Override
     public void setCheckinStation(String station) {
-        lastStart = station;
+        currentStart = station;
+    }
+
+    @Override
+    public void checkin(String station) {
+        checkedIn = true;
+    }
+
+    @Override
+    public void checkout(String station) {
+        checkedIn = false;
+        currentStart = "";
+        currentDestination = "";
     }
 }

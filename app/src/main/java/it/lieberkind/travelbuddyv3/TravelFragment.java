@@ -17,47 +17,68 @@ import android.widget.Toast;
 public class TravelFragment extends Fragment {
 
     /**
-     * Id's for stuff that need to go in bundles
+     * Id for check-in station
      */
     public static final String CHECKIN_STATION = "checkin_station";
+
+    /**
+     * Id for check-out station
+     */
     public static final String CHECKOUT_STATION = "checkout_station";
 
     /**
-     * Latest start and destination
+     * Id for whether the user is checked in or not
      */
-    private String lastStart;
-    private String lastDestination;
+    public static final String CHECKED_IN = "checked_in";
+
+    /**
+     * Latest start destination
+     */
+    private String lastStart = "";
+
+    /**
+     * Last end destination
+     */
+    private String lastDestination = "";
 
     /**
      * The listener for when one of the "select station" buttons are pressed
      */
-    StationSelectorListener stationSelectorClickListener;
+    private StationSelectorListener stationSelectorClickListener;
 
     /**
-     * Static method for easy creation of new TravelFragment instances
-     *
-     * @param checkinStation String
-     * @param checkoutStation String
-     * @return A new TravelFragment instance
+     * Listener for various events regarding the journey
      */
-    public static TravelFragment create(String checkinStation, String checkoutStation)
-    {
-        TravelFragment fragment = new TravelFragment();
-
-        Bundle args = new Bundle();
-        args.putString(CHECKIN_STATION, checkinStation);
-        args.putString(CHECKOUT_STATION, checkoutStation);
-
-        fragment.setArguments(args);
-
-        return fragment;
-    }
+    private TravelListener travelListener;
 
     /**
      * Empty constructor
      */
     public TravelFragment() {
     }
+
+    /**
+     * Static method for easy creation of new TravelFragment instances
+     *
+     * @param checkinStation String
+     * @param checkoutStation String
+     * @param checkedIn boolean
+     * @return A new TravelFragment instance
+     */
+    public static TravelFragment create(String checkinStation, String checkoutStation, boolean checkedIn)
+    {
+        TravelFragment fragment = new TravelFragment();
+
+        Bundle args = new Bundle();
+        args.putString(CHECKIN_STATION, checkinStation);
+        args.putString(CHECKOUT_STATION, checkoutStation);
+        args.putBoolean(CHECKED_IN, checkedIn);
+
+        fragment.setArguments(args);
+
+        return fragment;
+    }
+
 
     /**
      * Handler for when the fragment is attached to the activity
@@ -70,9 +91,10 @@ public class TravelFragment extends Fragment {
 
         try {
             stationSelectorClickListener = (StationSelectorListener) activity;
+            travelListener = (TravelListener) activity;
         } catch (ClassCastException exception) {
             throw new ClassCastException(activity.toString() +
-                    " must implement OnStationSelectorClickListener");
+                    " must implement OnStationSelectorClickListener and TravelListener");
         }
     }
 
@@ -116,7 +138,8 @@ public class TravelFragment extends Fragment {
 
             // If no check-in station is set, we should make sure that the check-in section is
             // enabled, and the check-out section is disabled
-            boolean enableCheckinSection = checkinStation == null || checkinStation.isEmpty();
+            boolean enableCheckinSection = !getArguments().getBoolean(CHECKED_IN);
+                       // checkinStation == null || checkinStation.isEmpty();
 
             toggleEnabled(travelFragmentView.findViewById(R.id.checkin_station), enableCheckinSection);
             toggleEnabled(travelFragmentView.findViewById(R.id.select_checkin_station_button), enableCheckinSection);
@@ -170,6 +193,7 @@ public class TravelFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    //<editor-fold desc="Button listeners">
     /**
      * Create the button listeners for the fragment's view
      *
@@ -194,8 +218,8 @@ public class TravelFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view) {
-                stationSelectorClickListener.onStationSelectorClick(view);
+            public void onClick(View button) {
+                stationSelectorClickListener.onStationSelectorClick(button);
             }
         });
     }
@@ -203,7 +227,7 @@ public class TravelFragment extends Fragment {
     /**
      * Create the select check-out station button listener
      *
-     * @param view View
+     * @param fragmentView View
      */
     private void createSelectCheckoutStationButtonListener(View fragmentView) {
         Button button = (Button) fragmentView.findViewById(R.id.select_checkout_station_button);
@@ -238,6 +262,21 @@ public class TravelFragment extends Fragment {
     }
 
     /**
+     * Create the check-out button listener
+     */
+    private void createCheckoutButtonListener(View view) {
+        Button button = (Button) view.findViewById(R.id.checkout_button);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkout();
+            }
+        });
+    }
+    //</editor-fold>
+
+    /**
      * Check in at a station
      */
     private void checkin() {
@@ -248,23 +287,47 @@ public class TravelFragment extends Fragment {
         if(station.isEmpty()) {
             showMessage("Please enter a check-in station");
         } else {
-            // Disable check-in button and text field
-            toggleEnabled(R.id.checkin_button, false);
-            toggleEnabled(R.id.checkin_station, false);
-            toggleEnabled(R.id.select_checkin_station_button, false);
+            // Tell the travel listener that we have checked in
+            travelListener.checkin(station);
 
-            // Enable check-out button and text field
-            toggleEnabled(R.id.checkout_button, true);
-            toggleEnabled(R.id.checkout_station, true);
-            toggleEnabled(R.id.select_checkout_station_button, true);
+            // Disable check-in section and disable check-out section
+            toggleCheckinSection(false);
+            toggleCheckoutSection(true);
         }
     }
 
     /**
-     * Create the check-out button listener
+     * Check out at a station
      */
-    private void createCheckoutButtonListener(View view) {
-        Button button = (Button) view.findViewById(R.id.checkout_button);
+    private void checkout()
+    {
+        EditText checkinField = (EditText) getActivity().findViewById(R.id.checkin_station);
+        String checkinStation = checkinField.getText().toString();
+
+        EditText checkoutField = (EditText) getActivity().findViewById(R.id.checkout_station);
+        String checkoutStation = checkoutField.getText().toString();
+
+        if(checkoutStation.isEmpty()) {
+            showMessage("Please enter a check-out station");
+        } else {
+            // Save the stations
+            lastStart = checkinStation;
+            lastDestination = checkoutStation;
+
+            // Clear the text fields
+            checkinField.setText("");
+            checkoutField.setText("");
+
+            // Inform the user...
+            showMessage("Journey ended!");
+
+            // Tell the travel listener that we have checked out
+            travelListener.checkout(checkoutStation);
+
+            // Enable check-in section and disable check-out section
+            toggleCheckinSection(true);
+            toggleCheckoutSection(false);
+        }
     }
 
     /**
@@ -300,7 +363,7 @@ public class TravelFragment extends Fragment {
      * Print a receipt of the user's last journey
      */
     private void printReceipt() {
-        if(lastStart != null && lastDestination != null) {
+        if(!lastStart.isEmpty() && !lastDestination.isEmpty()) {
             showMessage("You travelled from " + lastStart + " to " + lastDestination);
         } else {
             showMessage("Your journey has yet to begin");
@@ -313,13 +376,9 @@ public class TravelFragment extends Fragment {
      * @param show boolean
      */
     private void toggleCheckinSection(boolean show) {
-        EditText textField = (EditText) getActivity().findViewById(R.id.checkin_station);
-        Button stationsButton = (Button) getActivity().findViewById(R.id.select_checkin_station_button);
-        Button checkinButton = (Button) getActivity().findViewById(R.id.checkin_button);
-
-        textField.setEnabled(show);
-        stationsButton.setEnabled(show);
-        checkinButton.setEnabled(show);
+        toggleEnabled(R.id.checkin_station, show);
+        toggleEnabled(R.id.select_checkin_station_button, show);
+        toggleEnabled(R.id.checkin_button, show);
     }
 
     /**
@@ -328,13 +387,9 @@ public class TravelFragment extends Fragment {
      * @param show boolean
      */
     private void toggleCheckoutSection(boolean show) {
-        EditText textField = (EditText) getActivity().findViewById(R.id.checkout_station);
-        Button stationsButton = (Button) getActivity().findViewById(R.id.select_checkout_station_button);
-        Button checkoutButton = (Button) getActivity().findViewById(R.id.checkout_button);
-
-        textField.setEnabled(show);
-        stationsButton.setEnabled(show);
-        checkoutButton.setEnabled(show);
+        toggleEnabled(R.id.checkout_station, show);
+        toggleEnabled(R.id.select_checkout_station_button, show);
+        toggleEnabled(R.id.checkout_button, show);
     }
 
     /**
@@ -342,7 +397,11 @@ public class TravelFragment extends Fragment {
      */
     public interface StationSelectorListener {
         public void onStationSelectorClick(View view);
-
         public void setCheckinStation(String station);
+    }
+
+    public interface TravelListener {
+        public void checkin(String station);
+        public void checkout(String station);
     }
 }
