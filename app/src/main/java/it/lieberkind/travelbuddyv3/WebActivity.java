@@ -22,7 +22,6 @@ public class WebActivity extends Activity {
         browser.loadUrl("www.dsb.dk");
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
