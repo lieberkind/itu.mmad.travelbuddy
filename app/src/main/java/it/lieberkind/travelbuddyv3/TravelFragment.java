@@ -1,6 +1,7 @@
 package it.lieberkind.travelbuddyv3;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 
@@ -139,7 +141,6 @@ public class TravelFragment extends Fragment {
             // If no check-in station is set, we should make sure that the check-in section is
             // enabled, and the check-out section is disabled
             boolean enableCheckinSection = !getArguments().getBoolean(CHECKED_IN);
-                       // checkinStation == null || checkinStation.isEmpty();
 
             toggleEnabled(travelFragmentView.findViewById(R.id.checkin_station), enableCheckinSection);
             toggleEnabled(travelFragmentView.findViewById(R.id.select_checkin_station_button), enableCheckinSection);
@@ -205,6 +206,7 @@ public class TravelFragment extends Fragment {
         createSelectCheckoutStationButtonListener(fragmentView);
         createCheckinButtonListener(fragmentView);
         createCheckoutButtonListener(fragmentView);
+        createLogoButtonListener(fragmentView);
     }
 
     /**
@@ -271,6 +273,18 @@ public class TravelFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 checkout();
+            }
+        });
+    }
+
+    private void createLogoButtonListener(View view) {
+        ImageView logo = (ImageView) view.findViewById(R.id.logo);
+
+        logo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), WebActivity.class);
+                startActivity(intent);
             }
         });
     }
