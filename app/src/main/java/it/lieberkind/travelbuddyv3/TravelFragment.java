@@ -1,15 +1,19 @@
 package it.lieberkind.travelbuddyv3;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -44,11 +48,6 @@ public class TravelFragment extends Fragment {
     private String lastDestination = "";
 
     /**
-     * The listener for when one of the "select station" buttons are pressed
-     */
-    private StationSelectorListener stationSelectorClickListener;
-
-    /**
      * Listener for various events regarding the journey
      */
     private TravelListener travelListener;
@@ -76,6 +75,9 @@ public class TravelFragment extends Fragment {
         args.putString(CHECKOUT_STATION, checkoutStation);
         args.putBoolean(CHECKED_IN, checkedIn);
 
+        // Indicate that the fragment uses the Action Bar
+        fragment.setHasOptionsMenu(true);
+
         fragment.setArguments(args);
 
         return fragment;
@@ -92,7 +94,6 @@ public class TravelFragment extends Fragment {
         super.onAttach(activity);
 
         try {
-            stationSelectorClickListener = (StationSelectorListener) activity;
             travelListener = (TravelListener) activity;
         } catch (ClassCastException exception) {
             throw new ClassCastException(activity.toString() +
@@ -108,9 +109,6 @@ public class TravelFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Indicate that this fragment uses the Action Bar
-        setHasOptionsMenu(true);
     }
 
     /**
@@ -164,6 +162,8 @@ public class TravelFragment extends Fragment {
      */
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
         MenuItem item = menu.add(Menu.NONE, Menu.FIRST, Menu.NONE, "Receipt");
 
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
@@ -171,8 +171,6 @@ public class TravelFragment extends Fragment {
         if(getActivity().getActionBar() != null) {
             getActivity().getActionBar().setTitle("TravelBuddy");
         }
-
-        super.onCreateOptionsMenu(menu, inflater);
     }
 
     /**
@@ -183,12 +181,8 @@ public class TravelFragment extends Fragment {
      */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case Menu.FIRST:
-                printReceipt();
-                break;
-            default:
-                break;
+        if(item.getItemId() == Menu.FIRST) {
+            printReceipt();
         }
 
         return super.onOptionsItemSelected(item);
@@ -210,7 +204,7 @@ public class TravelFragment extends Fragment {
     }
 
     /**
-     * Create the select check-in station button listener
+     * Create the "select check-in station" button listener
      *
      * @param fragmentView View
      */
@@ -221,13 +215,13 @@ public class TravelFragment extends Fragment {
 
             @Override
             public void onClick(View button) {
-                stationSelectorClickListener.onStationSelectorClick(button);
+                travelListener.onStationSelectorClick(button);
             }
         });
     }
 
     /**
-     * Create the select check-out station button listener
+     * Create the "select check-out station" button listener
      *
      * @param fragmentView View
      */
@@ -242,9 +236,9 @@ public class TravelFragment extends Fragment {
 
                 String checkinStation = checkinStationField.getText().toString();
 
-                stationSelectorClickListener.setCheckinStation(checkinStation);
+                travelListener.setCurrentCheckinStation(checkinStation);
 
-                stationSelectorClickListener.onStationSelectorClick(button);
+                travelListener.onStationSelectorClick(button);
             }
         });
     }
@@ -277,16 +271,29 @@ public class TravelFragment extends Fragment {
         });
     }
 
+    /**
+     * Create the on click listener for the logo
+     *
+     * @param view
+     */
     private void createLogoButtonListener(View view) {
-        ImageView logo = (ImageView) view.findViewById(R.id.logo);
 
-        logo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), WebActivity.class);
-                startActivity(intent);
-            }
-        });
+        Display display = ((WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        int rotation = display.getRotation();
+
+        // Only set the logo onClick listener if we're in "normal" rotation
+        if(rotation == Surface.ROTATION_0) {
+            ImageView logo = (ImageView) view.findViewById(R.id.logo);
+
+            logo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), WebActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
+
     }
     //</editor-fold>
 
@@ -407,14 +414,11 @@ public class TravelFragment extends Fragment {
     }
 
     /**
-     * Listener for when the select station buttons are pressed
+     * Listener interface for communication with containing activities
      */
-    public interface StationSelectorListener {
-        public void onStationSelectorClick(View view);
-        public void setCheckinStation(String station);
-    }
-
     public interface TravelListener {
+        public void onStationSelectorClick(View view);
+        public void setCurrentCheckinStation(String station);
         public void checkin(String station);
         public void checkout(String station);
     }

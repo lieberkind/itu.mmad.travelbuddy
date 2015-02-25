@@ -5,12 +5,9 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Toast;
-
 
 public class TravelActivity extends Activity
-        implements TravelFragment.StationSelectorListener,
-                    TravelFragment.TravelListener,
+        implements TravelFragment.TravelListener,
                     StationListFragment.OnStationSelectedListener {
 
     /**
@@ -51,33 +48,22 @@ public class TravelActivity extends Activity
         fragmentTransaction.commit();
     }
 
-    /**
-     * Display a message to the user
-     *
-     * @param message
-     */
-    private void showMessage(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("current_start", currentStart);
+        outState.putString("current_destination", currentDestination);
+        outState.putBoolean("checked_in", checkedIn);
+        outState.putInt("last_select_station_button_id", lastSelectStationButtonId);
     }
 
-    /**
-     * Toggle the "enabled" state of a view
-     *
-     * @param viewId
-     * @param enabled
-     */
-    private void toggleEnabled(int viewId, boolean enabled) {
-        toggleEnabled(findViewById(viewId), enabled);
-    }
-
-    /**
-     * Toggle the "enabled" state of a view
-     *
-     * @param view
-     * @param enabled
-     */
-    private void toggleEnabled(View view, boolean enabled) {
-        view.setEnabled(enabled);
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        currentStart = savedInstanceState.getString("current_start");
+        currentDestination = savedInstanceState.getString("current_destination");
+        checkedIn = savedInstanceState.getBoolean("checked_id");
+        lastSelectStationButtonId = savedInstanceState.getInt("last_select_station_button_id");
     }
 
     @Override
@@ -113,7 +99,7 @@ public class TravelActivity extends Activity
     }
 
     @Override
-    public void setCheckinStation(String station) {
+    public void setCurrentCheckinStation(String station) {
         currentStart = station;
     }
 
